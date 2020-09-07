@@ -24,6 +24,10 @@ namespace InformationAboutCity.API
             {
                 app.UseDeveloperExceptionPage();
             }
+            else  // added the ExceptionHandler for use when the application is not in Development mode
+            {
+                app.UseExceptionHandler();
+            }
 
             app.Run(async (context) =>
             {
