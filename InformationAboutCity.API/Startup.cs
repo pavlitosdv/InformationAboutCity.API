@@ -29,6 +29,9 @@ namespace InformationAboutCity.API
                 app.UseExceptionHandler();
             }
 
+            // OPTIONAL to display text-based handler. Dsiplay status code results on the browser
+            app.UseStatusCodePages();
+
             app.Run(async (context) =>
             {
                 await context.Response.WriteAsync("Hello World!");
