@@ -15,6 +15,8 @@ namespace InformationAboutCity.API
     {
         public static void Main(string[] args)
         {
+
+            //we use this to Log errors that happen on bootstrapping
             var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
             {
