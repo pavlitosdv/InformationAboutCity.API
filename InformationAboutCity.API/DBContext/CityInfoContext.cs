@@ -16,7 +16,7 @@ namespace InformationAboutCity.API.DBContext
         public CityInfoContext(DbContextOptions<CityInfoContext> options)
            : base(options)
         {
-            Database.EnsureCreated();
+            //Database.EnsureCreated();
         }
 
         // one way of passing the connection string using the SqlServer
