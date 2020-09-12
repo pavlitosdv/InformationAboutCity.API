@@ -191,8 +191,8 @@ namespace InformationAboutCity.API.Controllers
                 return NotFound();
             }
 
-            var pointOfInterestEntity = _cityInfoRepository
-                .GetPointOfInterestForCity(cityId, id);
+            var pointOfInterestEntity = _cityInfoRepository.GetPointOfInterestForCity(cityId, id);
+
             if (pointOfInterestEntity == null)
             {
                 return NotFound();
@@ -329,6 +329,7 @@ namespace InformationAboutCity.API.Controllers
             }
 
             var pointOfInterestEntity = _cityInfoRepository.GetPointOfInterestForCity(cityId, id);
+
             if (pointOfInterestEntity == null)
             {
                 return NotFound();
