@@ -166,49 +166,113 @@ namespace InformationAboutCity.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var city = CitiesMockData.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            #region old code and manually mapped
+            //var city = CitiesMockData.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            //if (city == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //var pointOfInterestFromStore = city.PointsOfInterest
+            //    .FirstOrDefault(p => p.Id == id);
+            //if (pointOfInterest == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //pointOfInterestFromStore.Name = pointOfInterest.Name;
+            //pointOfInterestFromStore.Description = pointOfInterest.Description;
+
+            //return NoContent(); // the means that the request completed successfully
+            #endregion
+
+            if (!_cityInfoRepository.CityExists(cityId))
             {
                 return NotFound();
             }
 
-            var pointOfInterestFromStore = city.PointsOfInterest
-                .FirstOrDefault(p => p.Id == id);
-            if (pointOfInterest == null)
+            var pointOfInterestEntity = _cityInfoRepository
+                .GetPointOfInterestForCity(cityId, id);
+            if (pointOfInterestEntity == null)
             {
                 return NotFound();
             }
 
-            pointOfInterestFromStore.Name = pointOfInterest.Name;
-            pointOfInterestFromStore.Description = pointOfInterest.Description;
+            _mapper.Map(pointOfInterest, pointOfInterestEntity);
 
-            return NoContent(); // the means that the request completed successfully
+            _cityInfoRepository.UpdatePointOfInterestForCity(cityId, pointOfInterestEntity);
+
+            _cityInfoRepository.Save();
+
+            return NoContent();
         }
 
         [HttpPatch("{id}")]
         public IActionResult PartiallyUpdatePointOfInterest(int cityId, int id,
            [FromBody] JsonPatchDocument<PointOfInterestForUpdateDto> patchDoc) // we Use the JsonPatchDocument 
         {
-            var city = CitiesMockData.Current.Cities
-                .FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            #region in-memory data obsolete
+            //var city = CitiesMockData.Current.Cities
+            //    .FirstOrDefault(c => c.Id == cityId);
+            //if (city == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //var pointOfInterestFromStore = city.PointsOfInterest
+            //    .FirstOrDefault(c => c.Id == id);
+            //if (pointOfInterestFromStore == null)
+            //{
+            //    return NotFound();
+            //}
+            #endregion
+
+            if (!_cityInfoRepository.CityExists(cityId))
             {
                 return NotFound();
             }
 
-            var pointOfInterestFromStore = city.PointsOfInterest
-                .FirstOrDefault(c => c.Id == id);
-            if (pointOfInterestFromStore == null)
+            var pointOfInterestEntity = _cityInfoRepository.GetPointOfInterestForCity(cityId, id);
+            if (pointOfInterestEntity == null)
             {
                 return NotFound();
             }
 
-            var pointOfInterestToPatch =
-                   new PointOfInterestForUpdateDto()
-                   {
-                       Name = pointOfInterestFromStore.Name,
-                       Description = pointOfInterestFromStore.Description
-                   };
+            #region manually mapped (commented out)
+            //var pointOfInterestToPatch =
+            //       new PointOfInterestForUpdateDto()
+            //       {
+            //           Name = pointOfInterestFromStore.Name,
+            //           Description = pointOfInterestFromStore.Description
+            //       };
+
+
+            //patchDoc.ApplyTo(pointOfInterestToPatch, ModelState); // we apply the patch. We pass the Patch object and the ModelState for validation
+
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
+
+            //if (pointOfInterestToPatch.Description == pointOfInterestToPatch.Name)
+            //{
+            //    ModelState.AddModelError("Description", "The provided description should be different from the name.");
+            //}
+
+            ////we add this in order to validate the  > pointOfInterestToPatch < because the 
+            ////ModelState.IsValid above validates the PointOfInterestForUpdateDto
+            //if (!TryValidateModel(pointOfInterestToPatch))
+            //{
+            //    return BadRequest(ModelState);
+            //}
+
+
+            //PointOfInterestDto             // PointOfInterestForUpdateDto
+            //pointOfInterestFromStore.Name = pointOfInterestToPatch.Name;
+            //pointOfInterestFromStore.Description = pointOfInterestToPatch.Description;
+            #endregion
+
+            var pointOfInterestToPatch = _mapper.Map<PointOfInterestForUpdateDto>(pointOfInterestEntity);
 
             patchDoc.ApplyTo(pointOfInterestToPatch, ModelState); // we apply the patch. We pass the Patch object and the ModelState for validation
 
@@ -229,9 +293,11 @@ namespace InformationAboutCity.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            //PointOfInterestDto             // PointOfInterestForUpdateDto
-            pointOfInterestFromStore.Name = pointOfInterestToPatch.Name;
-            pointOfInterestFromStore.Description = pointOfInterestToPatch.Description;
+            _mapper.Map(pointOfInterestToPatch, pointOfInterestEntity);
+
+            _cityInfoRepository.UpdatePointOfInterestForCity(cityId, pointOfInterestEntity);
+
+            _cityInfoRepository.Save();
 
             return NoContent();
         }
