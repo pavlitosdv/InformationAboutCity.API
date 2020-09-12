@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace InformationAboutCity.API.Services
 {
-    interface ICityInfoRepository
+    public interface ICityInfoRepository
     {
         IEnumerable<City> GetCities();
 

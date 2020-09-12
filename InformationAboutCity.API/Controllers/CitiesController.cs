@@ -1,4 +1,5 @@
-﻿using InformationAboutCity.API.Models;
+﻿using AutoMapper;
+using InformationAboutCity.API.Models;
 using InformationAboutCity.API.ModelsDTO;
 using InformationAboutCity.API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -16,35 +17,37 @@ namespace InformationAboutCity.API.Controllers
         private readonly ICityInfoRepository _cityInfoRepository;
         private readonly IMapper _mapper;
 
-        public CitiesController(ICityInfoRepository cityInfoRepository,
-            IMapper mapper)
+        public CitiesController(ICityInfoRepository cityInfoRepository, IMapper mapper)
         {
-            _cityInfoRepository = cityInfoRepository ??
-                throw new ArgumentNullException(nameof(cityInfoRepository));
-            _mapper = mapper ??
-                throw new ArgumentNullException(nameof(mapper));
+            _cityInfoRepository = cityInfoRepository ?? throw new ArgumentNullException(nameof(cityInfoRepository));
+            
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         [HttpGet]
         public IActionResult GetCities()
         {
+            #region without auto mapper (manually) - commnented out
+            //var cityEntities = _cityInfoRepository.GetCities();
+
+            //var results = new List<CityWithoutPointsOfInterestDto>();
+
+            //foreach (var cityEntity in cityEntities)
+            //{
+            //    results.Add(new CityWithoutPointsOfInterestDto
+            //    {
+            //        Id = cityEntity.Id,
+            //        Description = cityEntity.Description,
+            //        Name = cityEntity.Name
+            //    });
+            //}
+
+            //return Ok(results);
+            #endregion
 
             var cityEntities = _cityInfoRepository.GetCities();
 
-            var results = new List<CityWithoutPointsOfInterestDto>();
-
-            foreach (var cityEntity in cityEntities)
-            {
-                results.Add(new CityWithoutPointsOfInterestDto
-                {
-                    Id = cityEntity.Id,
-                    Description = cityEntity.Description,
-                    Name = cityEntity.Name
-                });
-            }
-
-            return Ok(results);
-
+            return Ok(_mapper.Map<IEnumerable<CityWithoutPointsOfInterestDto>>(cityEntities));
 
             //return new JsonResult(CitiesMockData.Current.Cities);
 
@@ -73,6 +76,9 @@ namespace InformationAboutCity.API.Controllers
                 return Ok(_mapper.Map<CityDto>(city));
             }
 
+            //Here will need to also add a Profile becasuse a City mapped to CityDTO, the CityDTO it includes
+            // a list of PointOfInterestDto which has to be mapped with a PointOfInterest
+            // if we do not do it it will throw an excemption
             return Ok(_mapper.Map<CityWithoutPointsOfInterestDto>(city));
         }
     }
