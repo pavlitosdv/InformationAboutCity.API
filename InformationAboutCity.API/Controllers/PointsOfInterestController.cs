@@ -17,11 +17,20 @@ namespace InformationAboutCity.API.Controllers
 
         private readonly ILogger<PointsOfInterestController> _logger;
         private readonly IMailService _mailService;
+        private readonly ICityInfoRepository _cityInfoRepository;
+        private readonly IMapper _mapper;
 
-        public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailService)
+        public PointsOfInterestController(ILogger<PointsOfInterestController> logger,
+            IMailService mailService, ICityInfoRepository cityInfoRepository,
+            IMapper mapper)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+           
             _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+            
+            _cityInfoRepository = cityInfoRepository ?? throw new ArgumentNullException(nameof(cityInfoRepository));
+            
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
 
@@ -31,16 +40,15 @@ namespace InformationAboutCity.API.Controllers
             try
             {
                 // throw new Exception("Exception example.");
-
-                var city = CitiesMockData.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-
-                if (city == null)
+                if (!_cityInfoRepository.CityExists(cityId))
                 {
-                    _logger.LogInformation($"City with id {cityId} wasn't found when accessing points of interest.");
+                    _logger.LogInformation($"City with id {cityId} wasn't found when " +
+                        $"accessing points of interest.");
                     return NotFound();
                 }
 
-                return Ok(city.PointsOfInterest);
+                var pointsOfInterestForCity = _cityInfoRepository.GetPointsOfInterestForCity(cityId);
+                return Ok(_mapper.Map<IEnumerable<PointOfInterestDto>>(pointsOfInterestForCity));
             }
             catch (Exception ex)
             {
@@ -53,24 +61,40 @@ namespace InformationAboutCity.API.Controllers
         [HttpGet("{id}", Name = "GetPointOfInterest")]
         public IActionResult GetPointOfInterest(int cityId, int id)
         {
-            var city = CitiesMockData.Current.Cities
-                .FirstOrDefault(c => c.Id == cityId);
-
-            if (city == null)
+            if (!_cityInfoRepository.CityExists(cityId))
             {
                 return NotFound();
             }
 
-            // find point of interest
-            var pointOfInterest = city.PointsOfInterest
-                .FirstOrDefault(c => c.Id == id);
+            var pointOfInterest = _cityInfoRepository.GetPointOfInterestForCity(cityId, id);
 
             if (pointOfInterest == null)
             {
                 return NotFound();
             }
 
-            return Ok(pointOfInterest);
+            return Ok(_mapper.Map<PointOfInterestDto>(pointOfInterest));
+
+            #region old code obsolete
+            //var city = CitiesMockData.Current.Cities
+            //    .FirstOrDefault(c => c.Id == cityId);
+
+            //if (city == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //// find point of interest
+            //var pointOfInterest = city.PointsOfInterest
+            //    .FirstOrDefault(c => c.Id == id);
+
+            //if (pointOfInterest == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //return Ok(pointOfInterest);
+            #endregion
         }
 
         [HttpPost]
@@ -78,9 +102,7 @@ namespace InformationAboutCity.API.Controllers
         {
             if (pointOfInterest.Description == pointOfInterest.Name)
             {
-                ModelState.AddModelError(
-                    "Description",
-                    "The provided description should be different from the name.");
+                ModelState.AddModelError("Description","The provided description should be different from the name.");
             }
 
             if (!ModelState.IsValid)
@@ -95,8 +117,7 @@ namespace InformationAboutCity.API.Controllers
             }
 
             // demo purposes - to be improved
-            var maxPointOfInterestId = CitiesMockData.Current.Cities.SelectMany(
-                             c => c.PointsOfInterest).Max(p => p.Id);
+            var maxPointOfInterestId = CitiesMockData.Current.Cities.SelectMany(c => c.PointsOfInterest).Max(p => p.Id);
 
             var finalPointOfInterest = new PointOfInterestDto()
             {
@@ -117,9 +138,7 @@ namespace InformationAboutCity.API.Controllers
         {
             if (pointOfInterest.Description == pointOfInterest.Name)
             {
-                ModelState.AddModelError(
-                    "Description",
-                    "The provided description should be different from the name.");
+                ModelState.AddModelError("Description","The provided description should be different from the name.");
             }
 
             if (!ModelState.IsValid)
@@ -180,9 +199,7 @@ namespace InformationAboutCity.API.Controllers
 
             if (pointOfInterestToPatch.Description == pointOfInterestToPatch.Name)
             {
-                ModelState.AddModelError(
-                    "Description",
-                    "The provided description should be different from the name.");
+                ModelState.AddModelError("Description","The provided description should be different from the name.");
             }
 
             //we add this in order to validate the  > pointOfInterestToPatch < because the 
@@ -202,15 +219,13 @@ namespace InformationAboutCity.API.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeletePointOfInterest(int cityId, int id)
         {
-            var city = CitiesMockData.Current.Cities
-                .FirstOrDefault(c => c.Id == cityId);
+            var city = CitiesMockData.Current.Cities.FirstOrDefault(c => c.Id == cityId);
             if (city == null)
             {
                 return NotFound();
             }
 
-            var pointOfInterestFromStore = city.PointsOfInterest
-                .FirstOrDefault(c => c.Id == id);
+            var pointOfInterestFromStore = city.PointsOfInterest.FirstOrDefault(c => c.Id == id);
             if (pointOfInterestFromStore == null)
             {
                 return NotFound();
