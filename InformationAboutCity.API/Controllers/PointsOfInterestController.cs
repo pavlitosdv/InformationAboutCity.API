@@ -111,26 +111,45 @@ namespace InformationAboutCity.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var city = CitiesMockData.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            if (!_cityInfoRepository.CityExists(cityId))
             {
                 return NotFound();
             }
 
-            // demo purposes - to be improved
-            var maxPointOfInterestId = CitiesMockData.Current.Cities.SelectMany(c => c.PointsOfInterest).Max(p => p.Id);
+            #region in memory data (commented out)
+            //var city = CitiesMockData.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            //if (city == null)
+            //{
+            //    return NotFound();
+            //}
 
-            var finalPointOfInterest = new PointOfInterestDto()
-            {
-                Id = ++maxPointOfInterestId,
-                Name = pointOfInterest.Name,
-                Description = pointOfInterest.Description
-            };
+            //var maxPointOfInterestId = CitiesMockData.Current.Cities.SelectMany(c => c.PointsOfInterest).Max(p => p.Id);
+            #endregion
 
-            city.PointsOfInterest.Add(finalPointOfInterest);
+            #region manually mapping
+
+            //var finalPointOfInterest = new PointOfInterestDto()
+            //{
+            //    Id = ++maxPointOfInterestId,
+            //    Name = pointOfInterest.Name,
+            //    Description = pointOfInterest.Description
+            //city.PointsOfInterest.Add(finalPointOfInterest);
+            //return CreatedAtRoute("GetPointOfInterest", new { cityId, id = finalPointOfInterest.Id }, finalPointOfInterest);
+            //};
+
+            #endregion
+
+            var finalPointOfInterest = _mapper.Map<Models.PointOfInterest>(pointOfInterest);
+
+            _cityInfoRepository.AddPointOfInterestForCity(cityId, finalPointOfInterest);
+
+            // if something goes wrong here it will produces a server 500 error
+            _cityInfoRepository.Save();
+
+            var createdPointOfInterestToReturn = _mapper.Map<Models.PointOfInterestDto>(finalPointOfInterest);
 
             // name of the IActionResult   // we pass into an anonymous object the parameters   // finalPointOfInterest is the newly created object passed into the body
-            return CreatedAtRoute("GetPointOfInterest", new { cityId, id = finalPointOfInterest.Id },finalPointOfInterest);
+            return CreatedAtRoute("GetPointOfInterest", new { cityId, id = createdPointOfInterestToReturn.Id }, createdPointOfInterestToReturn);
         }
 
         [HttpPut("{id}")]

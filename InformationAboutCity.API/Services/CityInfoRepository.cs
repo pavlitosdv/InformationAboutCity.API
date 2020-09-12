@@ -69,6 +69,7 @@ namespace InformationAboutCity.API.Services
 
         public bool Save()
         {
+            //returns true when 0 or more entities have been saved
             return (_context.SaveChanges() >= 0);
         }
     }
