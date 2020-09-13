@@ -79,6 +79,8 @@ namespace InformationAboutCity.API
             // OPTIONAL to display text-based handler. Dsiplay status code results on the browser
             app.UseStatusCodePages();
 
+            app.UseMvc();
+
             app.Run(async (context) =>
             {
                 await context.Response.WriteAsync("Hello World!");
